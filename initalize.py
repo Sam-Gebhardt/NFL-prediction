@@ -10,7 +10,7 @@ import bs4 as bs
 
 
 NFL_TEAMS = 'ne', 'mia', 'nyj', 'buf', 'bal', 'pit', 'cin', 'cle', 'hou', 'ind', 'ten', 'jax', "kc", "lac", "den",\
-           "oak", 'ari', 'lar', 'sea', 'sf', 'dal', 'phi', 'wsh', 'nyg', 'chi', 'min', 'gb', 'det', 'no', 'car',\
+           "lv", 'ari', 'lar', 'sea', 'sf', 'dal', 'phi', 'wsh', 'nyg', 'chi', 'min', 'gb', 'det', 'no', 'car',\
            'atl', 'tb'
 
 # abbreviations of each nfl team
@@ -20,7 +20,7 @@ CONVERSION_CHART = {
     'Cincinnati ': 'cin', 'Cleveland ': 'cle', 'Dallas ': 'dal', 'Denver ': 'den', 'Detroit ': 'det',
     'Green Bay ': 'gb', 'Houston ': 'hou', 'Indianapolis ': 'ind', 'Jacksonville ': 'jax', 'Kansas City ': 'kc',
     'Los Angeles ': 'lar', 'Los Angeles 2 ': 'lac', 'Miami ': 'mia', 'Minnesota ': 'min', 'New England ': 'ne',
-    'New Orleans ': 'no', 'New York ': 'nyg', 'New York 2 ': 'nyj', 'Oakland ': 'oak', 'Philadelphia ': 'phi',
+    'New Orleans ': 'no', 'New York ': 'nyg', 'New York 2 ': 'nyj', 'Las Vegas ': 'lv', 'Philadelphia ': 'phi',
     'Pittsburgh ': 'pit', 'San Francisco ': 'sf', 'Seattle ': 'sea', 'Tampa Bay ': 'tb', 'Tennessee ': 'ten',
     'Washington ': 'wsh'
                     }
