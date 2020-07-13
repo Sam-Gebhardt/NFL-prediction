@@ -7,6 +7,8 @@ schedule for the upcoming season.
 import sqlite3
 import urllib.request
 import bs4 as bs
+import time
+import re
 
 
 NFL_TEAMS = 'ne', 'mia', 'nyj', 'buf', 'bal', 'pit', 'cin', 'cle', 'hou', 'ind', 'ten', 'jax', "kc", "lac", "den",\
@@ -25,6 +27,30 @@ CONVERSION_CHART = {
     'Washington ': 'wsh'
                     }
 
+CONVERT_BACKWARDS = {'ari': 'Arizona Cardinals', 'atl': 'Atlanta Falcons', 'bal': 'Baltimore Ravens',
+                     'buf': 'Buffalo Bills', 'car': 'Carolina Panthers', 'chi': 'Chicago Bears',
+                     'cin': 'Cincinnati Bengals', 'cle': 'Cleveland Browns', 'dal': 'Dallas Cowboys',
+                     'den': 'Denver Broncos', 'det': 'Detroit Lions', 'gb': 'Green Bay Packers',
+                     'hou': 'Houston Texans', 'ind': 'Indianapolis Colts', 'jax': 'Jacksonville Jaguars',
+                     'kc': 'Kansas City Chiefs', 'Los Angeles Chargers': 'lac', 'lar': 'Los Angeles Rams',
+                     'mia': 'Miami Dolphins', 'min': 'Minnesota Vikings', 'ne': 'New England Patriots',
+                     'no': 'New Orleans Saints', 'nyg': 'New York Giants', 'nyj': 'New York Jets',
+                     'lv': 'Las Vegas Raiders', 'phi': 'Philadelphia Eagles', 'pit': 'Pittsburgh Steelers',
+                     'sf': 'San Francisco 49ers', 'sea': 'Seattle Seahawks', 'tb': 'Tampa Bay Buccaneers',
+                     'ten': 'Tennessee Titans', 'wsh': 'Washington Redskins'}
+
+CONVERT = {'Arizona Cardinals': 'ari', 'Atlanta Falcons': 'atl', 'Baltimore Ravens': 'bal', 'Buffalo Bills': 'buf',
+           'Carolina Panthers': 'car', 'Chicago Bears': 'chi', 'Cincinnati Bengals': 'cin', 'Cleveland Browns': 'cle',
+           'Dallas Cowboys': 'dal', 'Denver Broncos': 'den', 'Detroit Lions': 'det', 'Green Bay Packers': 'gb',
+           'Houston Texans': 'hou', 'Indianapolis Colts': 'ind', 'Jacksonville Jaguars': 'jax',
+           'Kansas City Chiefs': 'kc', 'Los Angeles Chargers': 'lac', 'Los Angeles Rams': 'lar',
+           'Miami Dolphins': 'mia', 'Minnesota Vikings': 'min', 'New England Patriots': 'ne',
+           'New Orleans Saints': 'no', 'New York Giants': 'nyg', 'New York Jets': 'nyj', 'Las Vegas Raiders': 'lv',
+           'Philadelphia Eagles': 'phi', 'Pittsburgh Steelers': 'pit', 'San Francisco 49ers': 'sf',
+           'Seattle Seahawks': 'sea', 'Tampa Bay Buccaneers': 'tb', 'Tennessee Titans': 'ten',
+           'Washington Redskins': 'wsh'}
+
+# not sure which dict i'll need later, so ill keep them all for now
 # converts name to abbreviations
 # NFL_TEAMS and CONVERSION_CHART are imported by other files
 
@@ -45,7 +71,7 @@ def main():
     outcome: Did the team win or lose?
     wins: total team wins
     power: current ELO
-    avg_power: power per week (used to negate difference cause by bi-week)"""
+    avg_power: power per week (used to negate difference caused by bye-week)"""
 
     try:
         c.execute("""INSERT INTO season_2020 (week, team) VALUES (?, ?)""", (1, "CURRENT_WEEK"))
@@ -89,6 +115,33 @@ def main():
                 opponent = "BYE WEEK"
 
             c.execute("""INSERT INTO season_2020 (week, team, opponent) VALUES (?, ?, ?)""", (i + 1, team, opponent))
+
+        time.sleep(3)
+
+    conn.commit()
+    # Update the ranks based on the draft order of the last season
+    source = urllib.request.urlopen('https://www.espn.com/nfl/draft2020/story/_/id/28886588/2020-nfl-draft-order-'
+                                    'all-255-picks-seven-rounds-date-location')
+
+    soup = bs.BeautifulSoup(source, features='lxml')
+    table = soup.find_all("h2")
+    ranking = []
+    for i in table:
+
+        if "Round" in i.text:
+            continue
+
+        if "from" in i.text:  # Pick was traded, get original team
+            ranking.append(i.text[-5:-1])
+            continue
+
+        out = re.sub(r"[0-9.()-]", "", i.text)
+        out = out[1:-1]
+        ranking.append(out)
+
+    for j in range(len(ranking)):
+        c.execute("""UPDATE season_2020 SET loss_rank = ? AND win_rank = ? WHERE week = ? AND team = ?""",
+                  (j + 1, j - 32, 1, CONVERT[ranking[j]]))
 
     conn.commit()
     conn.close()
