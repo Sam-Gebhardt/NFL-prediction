@@ -140,7 +140,19 @@ def main():
         ranking.append(out)
 
     for j in range(len(ranking)):
-        c.execute("""UPDATE season_2020 SET loss_rank = ? AND win_rank = ? WHERE week = ? AND team = ?""",
+
+        if len(ranking[j]) == 4:
+
+            team = ranking[j][1:].lower()
+            team = CONVERT_BACKWARDS[team]
+            c.execute("""UPDATE season_2020 SET loss_rank = ?, win_rank = ? WHERE week = ? AND team = ?""",
+                      (j + 1, j - 32, 1, team))
+            continue
+
+        if "San Fran" in ranking[j]:
+            ranking[j] = "San Francisco 49ers"
+
+        c.execute("""UPDATE season_2020 SET loss_rank = ?, win_rank = ? WHERE week = ? AND team = ?""",
                   (j + 1, j - 32, 1, CONVERT[ranking[j]]))
 
     conn.commit()
