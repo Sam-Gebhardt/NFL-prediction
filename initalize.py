@@ -60,7 +60,7 @@ def main():
     c = conn.cursor()
 
     c.execute("""CREATE TABLE IF NOT EXISTS season_2020 (week int, team text, opponent text, loss_rank int, 
-                win_rank int, outcome text, wins int, power int, avg_power int, UNIQUE(week, team))""")
+                win_rank int, outcome text, wins int, bye int,  power int, avg_power int, UNIQUE(week, team))""")
 
     """Table data:
     week: The week of the NFL season
@@ -70,11 +70,12 @@ def main():
     win_rank: Points gained if an opponent beats team
     outcome: Did the team win or lose?
     wins: total team wins
+    bye: the week the team has a bye
     power: current ELO
     avg_power: power per week (used to negate difference caused by bye-week)"""
 
     try:
-        c.execute("""INSERT INTO season_2020 (week, team) VALUES (?, ?)""", (1, "CURRENT_WEEK"))
+        c.execute("""INSERT INTO season_2020 (week, team) VALUES (?, ?)""", (0, "CURRENT_WEEK"))
 
     except sqlite3.IntegrityError:  # Already been initialized
         print("Database already initialized.")
@@ -111,10 +112,12 @@ def main():
 
             if not bye and to_text[(i * 6) + 1].isnumeric():  # means its bye week
                 shift = -5
-                bye = True
+                bye = i + 1
                 opponent = "BYE WEEK"
 
-            c.execute("""INSERT INTO season_2020 (week, team, opponent) VALUES (?, ?, ?)""", (i + 1, team, opponent))
+            c.execute("""INSERT INTO season_2020 (week, team, opponent) VALUES (?, ?, ?)""",
+                      (i + 1, team, opponent))
+            c.execute("""UPDATE season_2020 SET bye = ? WHERE team = ? """, (bye, team))
 
         time.sleep(3)
 
@@ -144,7 +147,6 @@ def main():
         if len(ranking[j]) == 4:
 
             team = ranking[j][1:].lower()
-            team = CONVERT_BACKWARDS[team]
             c.execute("""UPDATE season_2020 SET loss_rank = ?, win_rank = ? WHERE week = ? AND team = ?""",
                       (j + 1, j - 32, 1, team))
             continue
