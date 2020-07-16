@@ -6,7 +6,7 @@ and losses from the past week.
 import sqlite3
 import bs4 as bs
 import urllib.request
-from initalize import NFL_TEAMS, CONVERSION_CHART
+from initalize import NFL_TEAMS
 import time
 
 
@@ -16,15 +16,14 @@ def main():
     c = conn.cursor()
 
     c.execute("""SELECT week FROM season_2020 WHERE team = 'CURRENT_WEEK'""")
-    # week = c.fetchall()[0][0]
-    week = 8
+    week = c.fetchall()[0][0]
 
     for team in NFL_TEAMS:
 
         c.execute("""SELECT bye FROM season_2020 WHERE team = ? and week = ?""", (team, 1))
         bye = c.fetchall()[0][0]
 
-        source = urllib.request.urlopen(f'https://www.espn.com/nfl/team/schedule/_/name/{team}/season/2019').read()
+        source = urllib.request.urlopen(f'https://www.espn.com/nfl/team/schedule/_/name/{team}/season/2020').read()
         soup = bs.BeautifulSoup(source, features='lxml')
 
         table = soup.find_all('span')
@@ -49,19 +48,17 @@ def main():
 
         shift = 0
         if bye < (week + 1):
-            shift = -11
+            shift = -10
 
         outcome = to_text[5 + (week * 11) + shift]
         total_wins = to_text[7 + (week * 11) + shift]
-
-        print(f"{team}: {week + 1}, {outcome} {total_wins}")
 
         c.execute("""UPDATE season_2020 SET outcome = ?, wins = ? WHERE team = ? AND week = ?""",
                   (outcome, total_wins, team, week + 1))
 
         time.sleep(2)
 
-    # c.execute("""UPDATE season_2020 SET week = ? WHERE team = 'CURRENT_WEEK'""", (week + 1))
+    c.execute("""UPDATE season_2020 SET week = ? WHERE team = 'CURRENT_WEEK'""", (week + 1))
 
     conn.commit()
     conn.close()
