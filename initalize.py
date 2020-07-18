@@ -10,6 +10,9 @@ import bs4 as bs
 import time
 import re
 
+if __name__ == "__main__":  # avoids circular imports
+    import predictions
+
 
 NFL_TEAMS = 'ne', 'mia', 'nyj', 'buf', 'bal', 'pit', 'cin', 'cle', 'hou', 'ind', 'ten', 'jax', "kc", "lac", "den",\
            "lv", 'ari', 'lar', 'sea', 'sf', 'dal', 'phi', 'wsh', 'nyg', 'chi', 'min', 'gb', 'det', 'no', 'car',\
@@ -69,6 +72,7 @@ def main():
     loss_rank: points lost if an opponent losses to team column
     win_rank: Points gained if an opponent beats team
     outcome: Did the team win or lose?
+    prediction: Are they predicted to win or lose?
     wins: total team wins
     bye: the week the team has a bye
     power: current ELO
@@ -147,22 +151,45 @@ def main():
         if len(ranking[j]) == 4:
 
             team = ranking[j][1:].lower()
-            c.execute("""UPDATE season_2020 SET loss_rank = ?, win_rank = ? WHERE week = ? AND team = ?""",
-                      (j + 1, j - 32, 1, team))
+            c.execute("""UPDATE season_2020 SET loss_rank = ?, win_rank = ?, power = ?, avg_power = ? 
+                         WHERE week = ? AND team = ?""", (j - 32, j + 1, j - 16, j - 16, 1, team))
             continue
 
         if "San Fran" in ranking[j]:
             ranking[j] = "San Francisco 49ers"
 
-        c.execute("""UPDATE season_2020 SET loss_rank = ?, win_rank = ? WHERE week = ? AND team = ?""",
-                  (j + 1, j - 32, 1, CONVERT[ranking[j]]))
+        c.execute("""UPDATE season_2020 SET loss_rank = ?, win_rank = ?, power = ?, avg_power = ? 
+                    WHERE week = ? AND team = ?""", (j - 32, j + 1, j - 16, j - 16, 1, CONVERT[ranking[j]]))
+
+    conn.commit()
+    c.execute("""SELECT opponent FROM season_2020 WHERE team = ?""", ("nyj", ))
+    jets = c.fetchall()
+
+    c.execute("""SELECT opponent FROM season_2020 WHERE team = ?""", ("lac", ))
+    chargers = c.fetchall()
+
+    # jets = new york 2; chargers = los angeles 2
+    for i in range(len(jets)):
+        if jets[i][0] == "BYE WEEK":
+            continue
+
+        c.execute("""UPDATE season_2020 SET opponent = ? WHERE team = ? AND week = ?""",
+                  ("New York 2 ", CONVERSION_CHART[jets[i][0]], i + 1))
+
+    for i in range(len(chargers)):
+        if chargers[i][0] == "BYE WEEK":
+            continue
+
+        c.execute("""UPDATE season_2020 SET opponent = ? WHERE team = ? AND week = ?""",
+                  ("Los Angeles 2 ", CONVERSION_CHART[chargers[i][0]], i + 1))
 
     conn.commit()
     conn.close()
+
+    predictions.main()
 
     print("Success!")
 
 
 if __name__ == "__main__":
-
     main()
