@@ -30,7 +30,12 @@ def main():
                   (CONVERSION_CHART[data[2]], week))
         ranks = c.fetchall()
 
-        # print(f"{data} ------ {ranks}")
+        change = ranks[0][0]
+        if data[5] == 'W':
+            change = ranks[0][1]
+
+        c.execute("""UPDATE season_2020 SET power = power + ? WHERE team = ? and week = ?""", (change, team, week))
+        c.execute("""UPDATE season_2020 SET avg_power = power / week WHERE team = ? and week = ?""", (team, week))
 
     conn.commit()
     conn.close()
@@ -38,11 +43,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-    # conn = sqlite3.connect('NFL.db')
-    # c = conn.cursor()
-    # c.execute("""SELECT * FROM season_2020 WHERE week = ? ORDER BY power DESC""", (1, ))
-    # out = c.fetchall()
-    # for i in out:
-    #     print(i)
+    print("Success!")
 
-    # conn.close()
+# TODO test with real data before use 
