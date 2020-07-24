@@ -3,14 +3,7 @@ Display more complex stats.
 """
 
 import sqlite3
-
-
-def main():
-
-    # conn = sqlite3.connect('NFL.db')
-    # c = conn.cursor()
-
-    pass
+from sys import argv
 
 
 def graph_accuracy():
@@ -65,3 +58,34 @@ def accuracy():
 
     print(f"{correct} correct out of {total} for {correct / total * 100}%")
 
+
+# TODO refactor accuracy functions into 1 or call the other
+
+def main():
+
+    if len(argv) == 1:
+        print("Must pass flag")
+        return
+
+    if argv[1].startswith('-'):
+
+        if argv[1][1:] == "help" or argv[1][1:] == 'h':
+            print("\nDisplay useful stats about the prediction:\n\n-help: Displays flags and their output\n-a: Display "
+                  "accuracy of the model\n-accuracy='team': Display accuracy of a specific team\n-v: Display a visual "
+                  "graph of rankings\n")
+
+        elif argv[1][1:] == 'a':
+            accuracy()
+
+        elif "accuracy" in argv[1][1:]:
+            team_accuracy(argv[1][10:])
+
+        elif argv[1][1:] == 'v':
+            graph_accuracy()
+
+        else:
+            print(f"Unknown flag: {argv[1][1:]}")
+
+
+if __name__ == "__main__":
+    main()
