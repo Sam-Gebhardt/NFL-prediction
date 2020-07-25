@@ -63,28 +63,53 @@ def accuracy():
 
 def main():
 
-    if len(argv) == 1:
-        print("Must pass flag")
+    v, a = False, False
+    t_a = ""
+
+    if len(argv) == 1:  # default behavior is just accuracy
+        accuracy()
         return
 
-    if argv[1].startswith('-'):
+    for i in argv:
 
-        if argv[1][1:] == "help" or argv[1][1:] == 'h':
-            print("\nDisplay useful stats about the prediction:\n\n-help: Displays flags and their output\n-a: Display "
-                  "accuracy of the model\n-accuracy='team': Display accuracy of a specific team\n-v: Display a visual "
-                  "graph of rankings\n")
+        if argv.index(i) == 0:
+            continue
 
-        elif argv[1][1:] == 'a':
-            accuracy()
+        if len(i) > 1 and i[0:2] == "--":
 
-        elif "accuracy" in argv[1][1:]:
-            team_accuracy(argv[1][10:])
+            if "accuracy" in i:
+                t_a = i[10:]
+            else:
+                print(f"Unknown long flag: {i[2:]}")
+                return
 
-        elif argv[1][1:] == 'v':
-            graph_accuracy()
+        elif i.startswith('-'):
 
-        else:
-            print(f"Unknown flag: {argv[1][1:]}")
+            for flag in i[1:]:
+
+                if flag == 'h':
+                    print("\nDisplay useful stats about the prediction:\n\n-help: Displays flags and their output\n-a: "
+                          "Display accuracy of the model\n-accuracy='team': Display accuracy of a specific team\n-v: "
+                          "Display a visual graph of rankings\n")
+
+                elif flag == 'a':
+                    a = True
+
+                elif flag == 'v':
+                    v = True
+
+                else:
+                    print(f"Unknown flag: {flag}")
+                    return
+
+    if a:
+        accuracy()
+
+    if v:
+        graph_accuracy()
+
+    if t_a:
+        team_accuracy(t_a)
 
 
 if __name__ == "__main__":
