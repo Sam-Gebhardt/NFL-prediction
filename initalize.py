@@ -9,6 +9,7 @@ import urllib.request
 import bs4 as bs
 import time
 import re
+from sys import argv
 
 if __name__ == "__main__":  # avoids circular imports
     import predictions
@@ -183,13 +184,32 @@ def main():
         c.execute("""UPDATE season_2020 SET opponent = ? WHERE team = ? AND week = ?""",
                   ("Los Angeles 2 ", CONVERSION_CHART[chargers[i][0]], i + 1))
 
+    print("Success!")
+
     conn.commit()
     conn.close()
 
     predictions.main()
 
-    print("Success!")
-
 
 if __name__ == "__main__":
-    main()
+
+    if len(argv) == 1:  # default behavior
+        main()
+
+    elif len(argv) > 2:
+        print("Can't pass multiple flags at the same time.")
+
+    elif argv[1] == "--help":
+        print("Create the initial database and populate it with the schedule for the year: \n\n--help: Shows usage and "
+              "flags \n--week='current': If initializing after the first week of the season where 'current' is the "
+              "last full week played \n--reset: Delete database and all data\n")
+
+    elif argv[1][0:7] == "--week=":
+        pass
+
+    elif argv[1] == "--reset":
+        pass
+
+    else:
+        print(f"Unknown flag: {argv[1]}")
