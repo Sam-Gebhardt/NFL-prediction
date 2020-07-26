@@ -10,6 +10,7 @@ import bs4 as bs
 import time
 import re
 from sys import argv
+from os import remove
 
 if __name__ == "__main__":  # avoids circular imports
     import predictions
@@ -192,6 +193,69 @@ def main():
     predictions.main()
 
 
+def mid_season_init(week: int):  # untested: test once season starts
+    """Create the database after the season has already started"""
+
+    conn = sqlite3.connect('NFL.db')
+    c = conn.cursor()
+
+    c.execute("""UPDATE season_2020 SET week = ? WHERE team = 'CURRENT_WEEK'""", (week, ))
+
+    for team in NFL_TEAMS:
+
+        source = urllib.request.urlopen(f'https://www.espn.com/nfl/team/schedule/_/name/{team}/season/2020').read()
+        soup = bs.BeautifulSoup(source, features='lxml')
+
+        table = soup.find_all('span')
+        to_text = [i.text for i in table]
+
+        for i in range(0, 17):
+
+            possible_bye = False
+            if 12 > i > 3:
+                possible_bye = True
+
+            second = False
+            start = 0
+            end = len(to_text)
+
+            for j in range(len(to_text)):
+                # cleanse irreverent data
+
+                if to_text[j] == "1":
+                    start = j
+                    second = True
+
+                elif second and to_text[j] == "WK":
+                    end = j
+                    break
+
+            to_text = to_text[start:end]
+
+            shift = 0
+            if possible_bye:
+                shift = -10
+
+            outcome = to_text[5 + (i * 11) + shift]
+            total_wins = to_text[7 + (i * 11) + shift]
+
+            pattern = re.compile(r"\d+-\d+")
+            match = pattern.search(total_wins)
+
+            if len(outcome) > 1 or not match:
+                outcome = to_text[5 + (week * 11)]
+                total_wins = to_text[7 + (week * 11)]
+                # assume the team is on bye and fix it if they aren't
+
+            c.execute("""UPDATE season_2020 SET outcome = ?, wins = ? WHERE team = ? AND week = ?""",
+                      (outcome, total_wins, team, week + 1))
+
+            time.sleep(2)
+
+    conn.commit()
+    conn.close()
+
+
 if __name__ == "__main__":
 
     if len(argv) == 1:  # default behavior
@@ -206,10 +270,26 @@ if __name__ == "__main__":
               "last full week played \n--reset: Delete database and all data\n")
 
     elif argv[1][0:7] == "--week=":
-        pass
+        try:
+            n = int(argv[1][7:])
+            if n > 17 or n < 1:
+                print("Must be a real week")
+            else:
+                mid_season_init(n)
+
+        except ValueError:  # not a number
+            print("The week must be a number")
 
     elif argv[1] == "--reset":
-        pass
+        try:
+            remove("NFL.db")
+        except FileNotFoundError:
+            pass
+
+        print("Reset Complete")
 
     else:
         print(f"Unknown flag: {argv[1]}")
+
+
+# mid_season_init(12)
