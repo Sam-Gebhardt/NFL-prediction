@@ -14,6 +14,7 @@ from os import remove
 
 if __name__ == "__main__":  # avoids circular imports
     import predictions
+    import calc_elo
 
 
 NFL_TEAMS = 'ne', 'mia', 'nyj', 'buf', 'bal', 'pit', 'cin', 'cle', 'hou', 'ind', 'ten', 'jax', "kc", "lac", "den",\
@@ -98,7 +99,7 @@ def main():
         to_text = [i.text for i in table]
 
         second = False
-        start = 0; end = len(to_text)
+        start, end = 0, len(to_text)
         for i in range(len(to_text)):
             # cleanse irreverent data
 
@@ -111,7 +112,7 @@ def main():
                 break
 
         to_text = to_text[start:end]
-        shift = 0; bye = False
+        shift, bye = 0, False
         for i in range(0, 17):  # populate table with schedule
 
             opponent = to_text[4 + (i * 6) + shift]
@@ -212,8 +213,12 @@ def mid_season_init(week: int):  # untested: test once season starts
         for i in range(0, 17):
 
             possible_bye = False
-            if 12 > i > 3:
+            if 12 > i > 2:
                 possible_bye = True
+
+            delta = 6
+            if week > i + 1:  # if the week has been played, delta is 11 due to increased data from ESPN
+                delta = 11
 
             second = False
             start = 0
@@ -236,8 +241,8 @@ def mid_season_init(week: int):  # untested: test once season starts
             if possible_bye:
                 shift = -10
 
-            outcome = to_text[5 + (i * 11) + shift]
-            total_wins = to_text[7 + (i * 11) + shift]
+            outcome = to_text[5 + (i * delta) + shift]   # 5
+            total_wins = to_text[7 + (i * delta) + shift]  # 7
 
             pattern = re.compile(r"\d+-\d+")
             match = pattern.search(total_wins)
@@ -254,6 +259,9 @@ def mid_season_init(week: int):  # untested: test once season starts
 
     conn.commit()
     conn.close()
+
+    for i in range(1, week + 1):  # update elo based on played weeks
+        calc_elo.main(i)
 
 
 if __name__ == "__main__":
@@ -291,5 +299,3 @@ if __name__ == "__main__":
     else:
         print(f"Unknown flag: {argv[1]}")
 
-
-# mid_season_init(12)
