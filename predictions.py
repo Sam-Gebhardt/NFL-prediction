@@ -6,17 +6,21 @@ their next game.
 
 import sqlite3
 from initalize import NFL_TEAMS, CONVERSION_CHART
+from sys import argv
 
 
-def main():
+def main(week=None, silent=False):
 
     conn = sqlite3.connect('NFL.db')
     c = conn.cursor()
 
-    c.execute("""SELECT week FROM season_2020 WHERE team = 'CURRENT_WEEK'""")
+    message = "(Already happened)"
+    if not week:
+        c.execute("""SELECT week FROM season_2020 WHERE team = 'CURRENT_WEEK'""")
+        week = c.fetchall()[0][0] + 1
+        message = ""
 
-    week = c.fetchall()[0][0] + 1
-    print(f"Week {week}:\n")
+    print(f"Week {week}{message}:\n")
     done = []  # prevent displaying the same results twice
 
     for team in NFL_TEAMS:
@@ -38,17 +42,32 @@ def main():
             outcome = 'L'
             winner, loser = opponent, team
 
-        if converted_opponent not in done:
+        if converted_opponent not in done and not silent:
             print(f"{winner} is predicted to beat {loser}")
 
         done.append(converted_opponent)
         done.append(team)
 
-        c.execute("""UPDATE season_2020 SET outcome = ? WHERE team = ? AND week = ?""", (outcome, team, week))
+        c.execute("""UPDATE season_2020 SET prediction = ? WHERE team = ? AND week = ?""", (outcome, team, week))
 
     conn.commit()
     conn.close()
 
 
-if __name__ == "__main__": 
-    main()
+if __name__ == "__main__":
+
+    if len(argv) == 1:  # default case
+        main()
+
+    else:
+        for i in range(1, len(argv)):
+            if argv[i].startswith("--"):
+                if argv[i][:7] == "--week=":
+                    # TODO error checking, valid week, etc
+                    main(argv[i][7:])
+                    break
+                    
+            elif argv[i].startswith("-"):
+                if argv[i][1] == 's':  # silent mode
+                    main(silent=True)
+
