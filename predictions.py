@@ -9,7 +9,7 @@ from initalize import NFL_TEAMS, CONVERSION_CHART
 from sys import argv
 
 
-def main(week=None, silent=False):
+def main(week=None, silent=False, verbose=False):
 
     conn = sqlite3.connect('NFL.db')
     c = conn.cursor()
@@ -45,8 +45,9 @@ def main(week=None, silent=False):
         if converted_opponent not in done and not silent:
             print(f"{winner} is predicted to beat {loser}")
 
-        done.append(converted_opponent)
-        done.append(team)
+        if verbose:
+            done.append(converted_opponent)
+            done.append(team)
 
         c.execute("""UPDATE season_2020 SET prediction = ? WHERE team = ? AND week = ?""", (outcome, team, week))
 
@@ -63,11 +64,22 @@ if __name__ == "__main__":
         for i in range(1, len(argv)):
             if argv[i].startswith("--"):
                 if argv[i][:7] == "--week=":
-                    # TODO error checking, valid week, etc
-                    main(argv[i][7:])
-                    break
-                    
+
+                    try:
+                        week_num = int(argv[i][7:])
+                        if week_num > 17 or week_num < 1:
+                            print("Week must be a week of the season (1 - 17)")
+                        main(argv[i][7:])
+
+                    except ValueError:  # not a number
+                        print("Week must be an integer")
+
             elif argv[i].startswith("-"):
-                if argv[i][1] == 's':  # silent mode
-                    main(silent=True)
+                for flag in range(1, len(argv[i])):
+
+                    if flag == 's':  # silent mode
+                        main(silent=True)
+
+                    elif flag == 'v':  # verbose
+                        main(verbose=True)
 
