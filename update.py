@@ -52,13 +52,14 @@ def main():
 
         outcome = to_text[5 + (week * 11) + shift]
         total_wins = to_text[7 + (week * 11) + shift]
+        print(f"{team}: {outcome}, {total_wins}")
 
         c.execute("""UPDATE season_2020 SET outcome = ?, wins = ? WHERE team = ? AND week = ?""",
                   (outcome, total_wins, team, week + 1))
 
         time.sleep(2)
 
-    c.execute("""UPDATE season_2020 SET week = ? WHERE team = 'CURRENT_WEEK'""", (week + 1))
+    c.execute("""UPDATE season_2020 SET week = ? WHERE team = 'CURRENT_WEEK'""", (week + 1, ))
 
     conn.commit()
     conn.close()

@@ -6,7 +6,7 @@ their next game.
 
 import sqlite3
 from initalize import NFL_TEAMS, CONVERSION_CHART
-from sys import argv
+# from sys import argv
 
 
 def main(week=None, silent=False, verbose=False):
@@ -25,13 +25,19 @@ def main(week=None, silent=False, verbose=False):
 
     for team in NFL_TEAMS:
 
-        c.execute("""SELECT * FROM season_2020 WHERE week = ? AND team = ?""", (week, team))
+        # get team's power
+        c.execute("""SELECT * FROM season_2020 WHERE week = ? AND team = ?""", (week - 1, team))
         data = c.fetchall()[0]
 
-        opponent = data[2]
+        # get next opponent
+        c.execute("""SELECT * FROM season_2020 WHERE week = ? AND team = ?""", (week, team))
+        next_data = c.fetchall()[0]
+
+        opponent = next_data[2]
         team_power = data[9]
 
-        c.execute("""SELECT power FROM season_2020 WHERE week = ? AND team = ?""", (week, CONVERSION_CHART[opponent]))
+        c.execute("""SELECT power FROM season_2020 WHERE week = ? AND team = ?""",
+                  (week - 1, CONVERSION_CHART[opponent]))
         opponent_power = c.fetchall()[0][0]
 
         converted_opponent = CONVERSION_CHART[opponent]
@@ -45,7 +51,7 @@ def main(week=None, silent=False, verbose=False):
         if converted_opponent not in done and not silent:
             print(f"{winner} is predicted to beat {loser}")
 
-        if verbose:
+        if not verbose:
             done.append(converted_opponent)
             done.append(team)
 
@@ -57,29 +63,4 @@ def main(week=None, silent=False, verbose=False):
 
 if __name__ == "__main__":
 
-    if len(argv) == 1:  # default case
-        main()
-
-    else:
-        for i in range(1, len(argv)):
-            if argv[i].startswith("--"):
-                if argv[i][:7] == "--week=":
-
-                    try:
-                        week_num = int(argv[i][7:])
-                        if week_num > 17 or week_num < 1:
-                            print("Week must be a week of the season (1 - 17)")
-                        main(argv[i][7:])
-
-                    except ValueError:  # not a number
-                        print("Week must be an integer")
-
-            elif argv[i].startswith("-"):
-                for flag in range(1, len(argv[i])):
-
-                    if flag == 's':  # silent mode
-                        main(silent=True)
-
-                    elif flag == 'v':  # verbose
-                        main(verbose=True)
-
+    main()

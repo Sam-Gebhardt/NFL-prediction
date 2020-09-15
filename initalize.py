@@ -66,7 +66,8 @@ def main():
     c = conn.cursor()
 
     c.execute("""CREATE TABLE IF NOT EXISTS season_2020 (week int, team text, opponent text, loss_rank int, 
-                win_rank int, outcome text, wins int, bye int,  power int, avg_power int, UNIQUE(week, team))""")
+                win_rank int, outcome text, prediction text, wins int, bye int,  power int, avg_power int, 
+                UNIQUE(week, team))""")
 
     """Table data:
     week: The week of the NFL season
@@ -266,36 +267,4 @@ def mid_season_init(week: int):  # untested: test once season starts
 
 if __name__ == "__main__":
 
-    if len(argv) == 1:  # default behavior
-        main()
-
-    elif len(argv) > 2:
-        print("Can't pass multiple flags at the same time.")
-
-    elif argv[1] == "--help":
-        print("Create the initial database and populate it with the schedule for the year: \n\n--help: Shows usage and "
-              "flags \n--week='current': If initializing after the first week of the season where 'current' is the "
-              "last full week played \n--reset: Delete database and all data\n")
-
-    elif argv[1][0:7] == "--week=":
-        try:
-            n = int(argv[1][7:])
-            if n > 17 or n < 1:
-                print("Must be a real week")
-            else:
-                mid_season_init(n)
-
-        except ValueError:  # not a number
-            print("The week must be a number")
-
-    elif argv[1] == "--reset":
-        try:
-            remove("NFL.db")
-        except FileNotFoundError:
-            pass
-
-        print("Reset Complete")
-
-    else:
-        print(f"Unknown flag: {argv[1]}")
-
+    main()
