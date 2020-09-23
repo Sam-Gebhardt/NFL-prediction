@@ -6,7 +6,30 @@ their next game.
 
 import sqlite3
 from initalize import NFL_TEAMS, CONVERSION_CHART
-# from sys import argv
+
+
+def get_key(val: str) -> str:
+    for key, value in CONVERSION_CHART.items():
+        if val == value:
+            return key
+
+
+def tie_breaker(team1: str, team2: str, week: int) -> tuple:
+    """Tie breakers are determined by the average opponents power in wins. If both are winless
+    It's """
+    conn = sqlite3.connect('NFL.db')
+    c = conn.cursor()
+
+    c.execute("""SElECT avg(power) FROM season_2020 WHERE opponent = ? AND week < ?""", (get_key(team1), week))
+    avg_1 = c.fetchall()[0][0]
+    c.execute("""SElECT avg(power) FROM season_2020 WHERE opponent = ? AND week < ?""", (team2, week))
+    avg_2 = c.fetchall()[0][0]
+
+    winner, loser, outcome = team1, team2, "W"
+    if avg_2 > avg_1:
+        winner, loser, outcome = team2, team1, "L"
+
+    return winner, loser, outcome
 
 
 def main(week=None, silent=False, verbose=False):
@@ -47,6 +70,9 @@ def main(week=None, silent=False, verbose=False):
         if opponent_power > team_power:
             outcome = 'L'
             winner, loser = opponent, team
+        elif opponent_power == team_power:  # if the teams are equal
+            result = tie_breaker(team, opponent, week)
+            winner, loser, outcome = result[0], result[1], result[2]
 
         if converted_opponent not in done and not silent:
             print(f"{winner} is predicted to beat {loser}")
