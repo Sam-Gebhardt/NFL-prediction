@@ -50,12 +50,15 @@ def main():
         if bye < (week + 1):
             shift = -10
 
-        outcome = to_text[5 + (week * 11) + shift]
-        total_wins = to_text[7 + (week * 11) + shift]
-        print(f"{team}: {outcome}, {total_wins}")
+        try:
+            outcome = to_text[5 + (week * 11) + shift]
+            total_wins = to_text[7 + (week * 11) + shift]
+            print(f"{team}: {outcome}, {total_wins}")
 
-        c.execute("""UPDATE season_2020 SET outcome = ?, wins = ? WHERE team = ? AND week = ?""",
-                  (outcome, total_wins, team, week + 1))
+            c.execute("""UPDATE season_2020 SET outcome = ?, wins = ? WHERE team = ? AND week = ?""",
+                      (outcome, total_wins, team, week + 1))
+        except IndexError:
+            print(team)
 
         time.sleep(2)
 

@@ -59,6 +59,9 @@ def main(week=None, silent=False, verbose=False):
         opponent = next_data[2]
         team_power = data[9]
 
+        if opponent == "BYE WEEK":
+            continue
+
         c.execute("""SELECT power FROM season_2020 WHERE week = ? AND team = ?""",
                   (week - 1, CONVERSION_CHART[opponent]))
         opponent_power = c.fetchall()[0][0]

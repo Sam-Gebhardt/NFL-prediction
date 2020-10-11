@@ -9,8 +9,7 @@ import urllib.request
 import bs4 as bs
 import time
 import re
-from sys import argv
-from os import remove
+
 
 if __name__ == "__main__":  # avoids circular imports
     import predictions

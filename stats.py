@@ -39,13 +39,13 @@ def graph_accuracy():
         if num[i] < 10:
             color = "r"
         plt.bar(weeks[i], num[i], color=color, width=1)
+        """Looping (instead of passing a list) allows for different bar colors and shows the entire
+          17 week season in the correct ratio """
 
     plt.legend()
     plt.xlabel('Week')
     plt.ylabel('Correct')
-
     plt.title('Accuracy')
-
     plt.show()
 
 
@@ -60,7 +60,7 @@ def accuracy():
 
     total, correct = -1, -1
     for i in range(1, week + 1):
-        per_week_total, per_week_correct = -1, -1
+        per_week_total, per_week_correct = 0, 0
         c.execute("""SELECT prediction, outcome FROM season_2020 WHERE week = ?""", (i, ))
         data = c.fetchall()
 
@@ -89,3 +89,5 @@ def accuracy():
 if __name__ == "__main__":
     accuracy()
     graph_accuracy()
+
+# todo combine 2 functions
