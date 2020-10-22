@@ -16,9 +16,8 @@ Overall, the model hovers around 60% accuracy. I'm tracking the 2020 season here
 ## Usage
 
 The program is broken up into separate files for ease of use. In order to use the model to:
-Before the season starts
-1. Run initalize.py which uses draft order to rank the teams and create predictions for Week 1.
-In Season
+
+1. Before the season starts, run initalize.py which uses draft order to rank the teams and create predictions for Week 1.
 2. Run update.py to scrape data in relation to wins and losses
 3. Run calc_elo.py to update ELO scores of each team
 4. Run predictions which outputs the predicted winners of each game
