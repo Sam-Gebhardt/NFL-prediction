@@ -87,6 +87,52 @@ def main(week=None):
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    conn = sqlite3.connect('NFL.db')
+    c = conn.cursor()
+    c.execute("""SELECT team FROM season_2020 WHERE week = ? ORDER  BY avg_power DESC""", (6, ))
+    order = c.fetchall()
+
+    for i in range(len(order)):
+        win = 32 - i
+        loss = -(i + 1)
+        # print(order[i][0], 32 - i, -(i + 1))
+        c.execute("""UPDATE season_2020 SET loss_rank = ? WHERE team = ? and week = ?""", (loss, order[i][0], 6))
+        c.execute("""UPDATE season_2020 SET loss_rank = ? WHERE team = ? and week = ?""", (loss, order[i][0], 6))
+        conn.commit()
+
+    week = 7
+    for i in NFL_TEAMS:
+        c.execute("""SELECT power, avg_power FROM season_2020 WHERE week = ? and team = ?""", (week - 1, i))
+        power = c.fetchall()
+
+        c.execute("""SELECT opponent, outcome FROM season_2020 WHERE week = ? and team = ?""", (week, i))
+        opp = c.fetchall()[0]
+
+        if opp[0] == "BYE WEEK":
+            c.execute("""UPDATE season_2020 SET power = ? WHERE week = ? and team = ?""", (power[0][0], week, i))
+            c.execute("""UPDATE season_2020 SET avg_power = ? WHERE week = ? and team = ?""", (power[0][1], week, i))
+            continue
+
+        c.execute("""SELECT loss_rank, win_rank FROM season_2020 WHERE week = ? and team = ?""",
+                  (week - 1, CONVERSION_CHART[opp[0]]))
+        ranks = c.fetchall()
+
+        if opp[1] == "W":
+            delta_power = power[0][0] + ranks[0][1]
+            delta_avg_power = (power[0][1] + ranks[0][1]) / week
+            c.execute("""UPDATE season_2020 SET power = ? WHERE week = ? and team = ?""", (delta_power, week, i))
+            c.execute("""UPDATE season_2020 SET avg_power = ? WHERE week = ? and team = ?""", (delta_avg_power, week, i))
+
+        else:
+            delta_power = power[0][0] + ranks[0][0]
+            delta_avg_power = (power[0][1] + ranks[0][0]) / week
+            c.execute("""UPDATE season_2020 SET power = ? WHERE week = ? and team = ?""", (delta_power, week, i))
+            c.execute("""UPDATE season_2020 SET avg_power = ? WHERE week = ? and team = ?""", (delta_avg_power, week, i))
+        print("")
+
+    conn.commit()
+    conn.close()
+    """Starting at week 4, re calc power, avg power and loss/win rank"""
     print("Success!")
 
