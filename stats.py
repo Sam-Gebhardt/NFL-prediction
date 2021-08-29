@@ -11,13 +11,13 @@ def graph_accuracy():
     conn = sqlite3.connect('NFL.db')
     c = conn.cursor()
 
-    c.execute("""SELECT week FROM season_2020 WHERE team = 'CURRENT_WEEK'""")
+    c.execute("""SELECT week FROM season_2021 WHERE team = 'CURRENT_WEEK'""")
     week = c.fetchall()[0][0]
 
     num = []
     for i in range(1, week + 1):
         correct = -1
-        c.execute("""SELECT prediction, outcome FROM season_2020 WHERE week = ?""", (i,))
+        c.execute("""SELECT prediction, outcome FROM season_2021 WHERE week = ?""", (i,))
         data = c.fetchall()
 
         for j in data:
@@ -55,13 +55,13 @@ def accuracy():
     conn = sqlite3.connect('NFL.db')
     c = conn.cursor()
 
-    c.execute("""SELECT week FROM season_2020 WHERE team = 'CURRENT_WEEK'""")
+    c.execute("""SELECT week FROM season_2021 WHERE team = 'CURRENT_WEEK'""")
     week = c.fetchall()[0][0]
 
     total, correct = -1, -1
     for i in range(1, week + 1):
         per_week_total, per_week_correct = 0, 0
-        c.execute("""SELECT prediction, outcome FROM season_2020 WHERE week = ?""", (i, ))
+        c.execute("""SELECT prediction, outcome FROM season_2021 WHERE week = ?""", (i, ))
         data = c.fetchall()
 
         for j in data:

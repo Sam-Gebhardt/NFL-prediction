@@ -5,7 +5,7 @@ their next game.
 """
 
 import sqlite3
-from initalize import NFL_TEAMS, CONVERSION_CHART
+from globals import NFL_TEAMS, CONVERSION_CHART
 
 
 def get_key(val: str) -> str:
@@ -20,9 +20,9 @@ def tie_breaker(team1: str, team2: str, week: int) -> tuple:
     conn = sqlite3.connect('NFL.db')
     c = conn.cursor()
 
-    c.execute("""SElECT avg(power) FROM season_2020 WHERE opponent = ? AND week < ?""", (get_key(team1), week))
+    c.execute("""SElECT avg(power) FROM season_2021 WHERE opponent = ? AND week < ?""", (get_key(team1), week))
     avg_1 = c.fetchall()[0][0]
-    c.execute("""SElECT avg(power) FROM season_2020 WHERE opponent = ? AND week < ?""", (team2, week))
+    c.execute("""SElECT avg(power) FROM season_2021 WHERE opponent = ? AND week < ?""", (team2, week))
     avg_2 = c.fetchall()[0][0]
 
     winner, loser, outcome = team1, team2, "W"
@@ -39,7 +39,7 @@ def main(week=None, silent=False, verbose=False):
 
     message = "(Already happened)"
     if not week:
-        c.execute("""SELECT week FROM season_2020 WHERE team = 'CURRENT_WEEK'""")
+        c.execute("""SELECT week FROM season_2021 WHERE team = 'CURRENT_WEEK'""")
         week = c.fetchall()[0][0] + 1
         message = ""
 
@@ -49,20 +49,20 @@ def main(week=None, silent=False, verbose=False):
     for team in NFL_TEAMS:
 
         # get team's power
-        c.execute("""SELECT * FROM season_2020 WHERE week = ? AND team = ?""", (week - 1, team))
+        c.execute("""SELECT * FROM season_2021 WHERE week = ? AND team = ?""", (week - 1, team))
         data = c.fetchall()[0]
 
         # get next opponent
-        c.execute("""SELECT * FROM season_2020 WHERE week = ? AND team = ?""", (week, team))
+        c.execute("""SELECT * FROM season_2021 WHERE week = ? AND team = ?""", (week, team))
         next_data = c.fetchall()[0]
 
         opponent = next_data[2]
         team_power = data[9]
 
-        if opponent == "BYE WEEK":
+        if opponent == "BYE":
             continue
 
-        c.execute("""SELECT power FROM season_2020 WHERE week = ? AND team = ?""",
+        c.execute("""SELECT power FROM season_2021 WHERE week = ? AND team = ?""",
                   (week - 1, CONVERSION_CHART[opponent]))
         opponent_power = c.fetchall()[0][0]
 
@@ -84,7 +84,7 @@ def main(week=None, silent=False, verbose=False):
             done.append(converted_opponent)
             done.append(team)
 
-        c.execute("""UPDATE season_2020 SET prediction = ? WHERE team = ? AND week = ?""", (outcome, team, week))
+        c.execute("""UPDATE season_2021 SET prediction = ? WHERE team = ? AND week = ?""", (outcome, team, week))
 
     conn.commit()
     conn.close()
