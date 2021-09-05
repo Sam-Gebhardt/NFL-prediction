@@ -63,10 +63,13 @@ def get_team_name(name: str) -> str:
 
     for i in names:
         i = re.sub("[0-9.*]", "", i)
-        index = i.find('(')
+        start, middle = i.find('('), i.find("via")
 
-        if index != -1:
-            i = i[:index]
+        if middle != -1:  # pick was traded 2+ times
+            end = i.find(')')
+            i = i[middle + 4:end]
+        elif start != -1:  # pick was traded 1 time
+            i = i[start + 5:middle]
         
         rank.append(i.strip())
 
@@ -114,12 +117,12 @@ def draft_order(c, conn) -> None:
         if jets[i][0] != "BYE":
             
             c.execute("""UPDATE season_2021 SET opponent = ? WHERE team = ? AND week = ?""",
-                    ("New York 2 ", CONVERSION_CHART[jets[i][0]], i + 1))
+                    ("New York 2", CONVERSION_CHART[jets[i][0]], i + 1))
 
         if chargers[i][0] != "BYE":
 
             c.execute("""UPDATE season_2021 SET opponent = ? WHERE team = ? AND week = ?""",
-                  ("Los Angeles 2 ", CONVERSION_CHART[chargers[i][0]], i + 1))
+                  ("Los Angeles 2", CONVERSION_CHART[chargers[i][0]], i + 1))
 
     print("Success!")
 
@@ -149,7 +152,7 @@ def main():
 
     try:
         # dummy team that holds the current week on the NFL season
-        c.execute("""INSERT INTO season_2021 (week, team) VALUES (?, ?)""", (0, "CURRENT_WEEK"))
+        c.execute("""INSERT INTO season_2021 (week, team) VALUES (?, ?)""", (1, "CURRENT_WEEK"))
 
     except sqlite3.IntegrityError:  # Already been initialized
         print("Database already initialized.")
@@ -159,7 +162,6 @@ def main():
     draft_order(c, conn)
 
     conn.close()
-
     
 
 def mid_season_init(week: int):  # untested: test once season starts
@@ -178,7 +180,7 @@ def mid_season_init(week: int):  # untested: test once season starts
         table = soup.find_all('span')
         to_text = [i.text for i in table]
 
-        for i in range(0, 17):
+        for i in range(0, 18):
 
             possible_bye = False
             if 12 > i > 2:
@@ -233,5 +235,4 @@ def mid_season_init(week: int):  # untested: test once season starts
 
 
 if __name__ == "__main__":
-
     main()

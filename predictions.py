@@ -15,8 +15,8 @@ def get_key(val: str) -> str:
 
 
 def tie_breaker(team1: str, team2: str, week: int) -> tuple:
-    """Tie breakers are determined by the average opponents power in wins. If both are winless
-    It's """
+    """Tie breakers are determined by the average opponents power in wins."""
+
     conn = sqlite3.connect('NFL.db')
     c = conn.cursor()
 
@@ -32,24 +32,14 @@ def tie_breaker(team1: str, team2: str, week: int) -> tuple:
     return winner, loser, outcome
 
 
-def main(week=None, silent=False, verbose=False):
+def prediction(c, conn, week: int) -> None:
 
-    conn = sqlite3.connect('NFL.db')
-    c = conn.cursor()
-
-    message = "(Already happened)"
-    if not week:
-        c.execute("""SELECT week FROM season_2021 WHERE team = 'CURRENT_WEEK'""")
-        week = c.fetchall()[0][0] + 1
-        message = ""
-
-    print(f"Week {week}{message}:\n")
     done = []  # prevent displaying the same results twice
 
     for team in NFL_TEAMS:
 
         # get team's power
-        c.execute("""SELECT * FROM season_2021 WHERE week = ? AND team = ?""", (week - 1, team))
+        c.execute("""SELECT * FROM season_2021 WHERE week = ? AND team = ?""", (week, team))
         data = c.fetchall()[0]
 
         # get next opponent
@@ -63,28 +53,40 @@ def main(week=None, silent=False, verbose=False):
             continue
 
         c.execute("""SELECT power FROM season_2021 WHERE week = ? AND team = ?""",
-                  (week - 1, CONVERSION_CHART[opponent]))
+                  (week, CONVERSION_CHART[opponent]))
         opponent_power = c.fetchall()[0][0]
 
-        converted_opponent = CONVERSION_CHART[opponent]
-        outcome = 'W'
-        winner, loser = team, opponent
+        opponent = CONVERSION_CHART[opponent]
+        winner, loser, outcome = team, opponent, 'W'
 
         if opponent_power > team_power:
-            outcome = 'L'
-            winner, loser = opponent, team
-        elif opponent_power == team_power:  # if the teams are equal
+            winner, loser, outcome = opponent, team, 'L'
+        elif opponent_power == team_power:
             result = tie_breaker(team, opponent, week)
             winner, loser, outcome = result[0], result[1], result[2]
 
-        if converted_opponent not in done and not silent:
+        if opponent not in done:
             print(f"{winner} is predicted to beat {loser}")
 
-        if not verbose:
-            done.append(converted_opponent)
-            done.append(team)
+        done.append(opponent)
+        done.append(team)
 
         c.execute("""UPDATE season_2021 SET prediction = ? WHERE team = ? AND week = ?""", (outcome, team, week))
+
+
+def main(week=None):
+
+    conn = sqlite3.connect('NFL.db')
+    c = conn.cursor()
+
+    message = "(Already happened)"
+    if not week:
+        c.execute("""SELECT week FROM season_2021 WHERE team = 'CURRENT_WEEK'""")
+        week = c.fetchall()[0][0]
+        message = ""
+
+    print(f"Week {week}{message}:\n")
+    prediction(c, conn, week)
 
     conn.commit()
     conn.close()
