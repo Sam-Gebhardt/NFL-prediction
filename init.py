@@ -171,7 +171,6 @@ def draft_order(cursor: sqlite3.Cursor, conn: sqlite3.Connection) -> None:
 
         index += 1
 
-
     conn.commit()
 
 
@@ -184,21 +183,21 @@ def main() -> None:
     cursor = conn.cursor()
 
     # Make sure Table hasn't already been created
-    # try:
+    try:
 
-    #     cursor.execute(f"""CREATE TABLE IF NOT EXISTS season_{YEAR} (week int, team text, opponent text,
-    #                     loss_rank int, win_rank int, outcome text, prediction text, wins int, bye int,
-    #                     power int, avg_power int, UNIQUE(week, team))""")
+        cursor.execute(f"""CREATE TABLE IF NOT EXISTS season_{YEAR} (week int, team text, opponent text,
+                        loss_rank int, win_rank int, outcome text, prediction text, wins int, bye int,
+                        power int, avg_power int, UNIQUE(week, team))""")
 
-    #     # dummy team that holds the current week on the NFL season
-    #     cursor.execute(f"""INSERT INTO season_{YEAR} (week, team) VALUES (?, ?)""", (1, "CURRENT_WEEK"))
+        # dummy team that holds the current week on the NFL season
+        cursor.execute(f"""INSERT INTO season_{YEAR} (week, team) VALUES (?, ?)""", (1, "CURRENT_WEEK"))
 
-    # except sqlite3.IntegrityError:  # Already been initialized
-    #     print("Database already initialized.")
-    #     return
+    except sqlite3.IntegrityError:  # Already been initialized
+        print("Database already initialized.")
+        return
 
-    # get_schedule(cursor, conn)
-    # draft_order(cursor, conn)
+    get_schedule(cursor, conn)
+    draft_order(cursor, conn)
     fix_two_team_problem(cursor, conn)
 
     conn.close()
