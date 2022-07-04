@@ -2,6 +2,8 @@
 Holds a tuple of all NFL teams abbreviations and dicts of commonly needed conversions
 """
 
+YEAR = "2022"
+
 NFL_TEAMS = ('ne', 'mia', 'nyj', 'buf', 'bal', 'pit', 'cin', 'cle', 'hou', 'ind', 'ten', 'jax',
 'kc', 'lac', 'den', 'lv', 'ari', 'lar', 'sea', 'sf', 'dal', 'phi', 'wsh', 'nyg',\
 'chi', 'min', 'gb', 'det', 'no', 'car', 'atl', 'tb')
@@ -11,9 +13,9 @@ CITY_T0_ABBREV = {
     'Arizona': 'ari', 'Atlanta': 'atl', 'Baltimore': 'bal', 'Buffalo': 'buf', 'Carolina': 'car',
     'Chicago': 'chi', 'Cincinnati': 'cin', 'Cleveland': 'cle', 'Dallas': 'dal', 'Denver': 'den',
     'Detroit': 'det', 'Green Bay': 'gb', 'Houston': 'hou', 'Indianapolis': 'ind',
-    'Jacksonville': 'jax', 'Kansas City': 'kc', 'Los Angeles': 'lar', 'Los Angeles 2': 'lac',
+    'Jacksonville': 'jax', 'Kansas City': 'kc', 'Los Angeles': 'la',
     'Miami': 'mia', 'Minnesota': 'min', 'New England': 'ne', 'New Orleans': 'no',
-    'New York': 'nyg', 'New York 2': 'nyj', 'Las Vegas': 'lv', 'Philadelphia': 'phi',
+    'New York': 'ny', 'Las Vegas': 'lv', 'Philadelphia': 'phi',
     'Pittsburgh': 'pit', 'San Francisco': 'sf', 'Seattle': 'sea', 'Tampa Bay': 'tb',
     'Tennessee': 'ten', 'Washington': 'wsh'
                     }
@@ -29,7 +31,7 @@ ABBREV_TO_FULL = {
     'no': 'New Orleans Saints', 'nyg': 'New York Giants', 'nyj': 'New York Jets',
     'lv': 'Las Vegas Raiders', 'phi': 'Philadelphia Eagles', 'pit': 'Pittsburgh Steelers',
     'sf': 'San Francisco 49ers', 'sea': 'Seattle Seahawks', 'tb': 'Tampa Bay Buccaneers',
-    'ten': 'Tennessee Titans', 'wsh': 'Washington Football Team'
+    'ten': 'Tennessee Titans', 'wsh': 'Commanders'
                     }
 
 FULL_TO_ABBREV = {
@@ -43,5 +45,5 @@ FULL_TO_ABBREV = {
     'New Orleans Saints': 'no', 'New York Giants': 'nyg', 'New York Jets': 'nyj',
     'Las Vegas Raiders': 'lv', 'Philadelphia Eagles': 'phi', 'Pittsburgh Steelers': 'pit',
     'San Francisco 49ers': 'sf', 'Seattle Seahawks': 'sea', 'Tampa Bay Buccaneers': 'tb',
-    'Tennessee Titans': 'ten', 'Washington Football Team': 'wsh'
+    'Tennessee Titans': 'ten', 'Washington Commanders': 'wsh'
         }
