@@ -1,29 +1,23 @@
 """
-For each team in the NFL
-predict if they will win
-their next game.
+Predict if each team will win their next game.
 """
 
+# pylint: disable=line-too-long, pointless-string-statement
+
 import sqlite3
-from globals import NFL_TEAMS, CONVERSION_CHART
+from globals import NFL_TEAMS, YEAR, ABBREV_TO_FULL
 
 
-def get_key(val: str) -> str:
-    for key, value in CONVERSION_CHART.items():
-        if val == value:
-            return key
-
-
-def tie_breaker(team1: str, team2: str, week: int) -> tuple:
+def tie_breaker(cursor: sqlite3.Cursor, team1: str, team2: str, week: int) -> tuple:
     """Tie breakers are determined by the average opponents power in wins."""
 
-    conn = sqlite3.connect('NFL.db')
-    c = conn.cursor()
+    cursor.execute("""SElECT avg(power) FROM season_2021 WHERE opponent = ? AND week < ?""",
+                  (team1, week))
+    avg_1 = cursor.fetchall()[0][0]
 
-    c.execute("""SElECT avg(power) FROM season_2021 WHERE opponent = ? AND week < ?""", (get_key(team1), week))
-    avg_1 = c.fetchall()[0][0]
-    c.execute("""SElECT avg(power) FROM season_2021 WHERE opponent = ? AND week < ?""", (team2, week))
-    avg_2 = c.fetchall()[0][0]
+    cursor.execute("""SElECT avg(power) FROM season_2021 WHERE opponent = ? AND week < ?""",
+                  (team2, week))
+    avg_2 = cursor.fetchall()[0][0]
 
     winner, loser, outcome = team1, team2, "W"
     if avg_2 > avg_1:
@@ -32,63 +26,74 @@ def tie_breaker(team1: str, team2: str, week: int) -> tuple:
     return winner, loser, outcome
 
 
-def prediction(c, conn, week: int) -> None:
+def prediction(cursor: sqlite3.Cursor, conn: sqlite3.Connection) -> None:
+    """
+    Predict which team will win each game this week
+    """
 
-    done = []  # prevent displaying the same results twice
+    cursor.execute(f"""SELECT week FROM season_{YEAR} WHERE team = 'CURRENT_WEEK'""")
+    week = cursor.fetchall()[0][0]
+
+    print(f'Predictions for Week {week}\n')
+
+    # prevent displaying the same results twice
+    seen = set()
+    # easy conversion from W -> L and L -> W
+    outcomes = {'W': 'L', 'L': 'W'}
 
     for team in NFL_TEAMS:
 
-        # get team's power
-        c.execute("""SELECT * FROM season_2021 WHERE week = ? AND team = ?""", (week, team))
-        data = c.fetchall()[0]
-
-        # get next opponent
-        c.execute("""SELECT * FROM season_2021 WHERE week = ? AND team = ?""", (week, team))
-        next_data = c.fetchall()[0]
-
-        opponent = next_data[2]
-        team_power = data[9]
-
-        if opponent == "BYE":
+        # Only want to print once
+        if team in seen:
             continue
 
-        c.execute("""SELECT power FROM season_2021 WHERE week = ? AND team = ?""",
-                  (week, CONVERSION_CHART[opponent]))
-        opponent_power = c.fetchall()[0][0]
+        cursor.execute(f"""SELECT opponent, power, avg_power, bye FROM season_{YEAR}
+                        WHERE week = ? AND team = ?""", (week, team, ))
+        team1 = cursor.fetchall()[0]
+        opponent = team1[0]
 
-        opponent = CONVERSION_CHART[opponent]
-        winner, loser, outcome = team, opponent, 'W'
+        if team1[3] == week:
+            print(f'{team} is on bye')
+            continue
 
-        if opponent_power > team_power:
-            winner, loser, outcome = opponent, team, 'L'
-        elif opponent_power == team_power:
-            result = tie_breaker(team, opponent, week)
-            winner, loser, outcome = result[0], result[1], result[2]
+        cursor.execute(f"""SELECT power, avg_power FROM season_{YEAR} WHERE week = ? AND team = ?""",
+                        (week, team1[0], ))
+        team2 = cursor.fetchall()[0]
 
-        if opponent not in done:
-            print(f"{winner} is predicted to beat {loser}")
+        if team1[2] > team2[1]:
+            outcome, winner, loser = 'W', team, opponent
+        elif team1[2] < team2[1]:
+            outcome, winner, loser = 'L', opponent, team
+        # unlikely case of a tie
+        else:
+            outcome, winner, loser = tie_breaker(cursor, team1, team2, week)
 
-        done.append(opponent)
-        done.append(team)
+        print(f'The {ABBREV_TO_FULL[winner].split(" ")[-1]} should beat the {ABBREV_TO_FULL[loser].split(" ")[-1]}')
+        # print(f'The {ABBREV_TO_FULL[winner]} should beat the {ABBREV_TO_FULL[loser]}')
 
-        c.execute("""UPDATE season_2021 SET prediction = ? WHERE team = ? AND week = ?""", (outcome, team, week))
+        seen.add(team)
+        seen.add(team1[0])
 
-
-def main(week=None):
-
-    conn = sqlite3.connect('NFL.db')
-    c = conn.cursor()
-
-    message = "(Already happened)"
-    if not week:
-        c.execute("""SELECT week FROM season_2021 WHERE team = 'CURRENT_WEEK'""")
-        week = c.fetchall()[0][0]
-        message = ""
-
-    print(f"Week {week}{message}:\n")
-    prediction(c, conn, week)
+        # update team1
+        cursor.execute(f"""UPDATE season_{YEAR} SET prediction = ? WHERE team = ? AND week = ?""",
+                       (outcome, team, week))
+        # update team2
+        cursor.execute(f"""UPDATE season_{YEAR} SET prediction = ? WHERE team = ? AND week = ?""",
+                       (outcomes[outcome], opponent, week))
 
     conn.commit()
+
+
+def main() -> None:
+    """
+    Driver code
+    """
+
+    conn = sqlite3.connect('NFL.db')
+    cursor = conn.cursor()
+
+    prediction(cursor, conn)
+
     conn.close()
 
 
