@@ -12,7 +12,7 @@ import re
 import urllib.request
 import bs4 as bs
 from globals import FULL_TO_ABBREV, NFL_TEAMS, YEAR, CITY_T0_ABBREV
-
+from predictions import prediction
 
 """
 Table data:
@@ -99,6 +99,7 @@ def get_schedule(cursor: sqlite3.Cursor, conn: sqlite3.Connection) -> None:
         # print(schedule)
 
         index = 1
+        bye = 0
         for i in schedule:
 
             # remove '@ ' or 'vs'
@@ -107,13 +108,8 @@ def get_schedule(cursor: sqlite3.Cursor, conn: sqlite3.Connection) -> None:
 
             # Deleted first 2 chars: BYE WEEK -> E WEEK
             if i == "E WEEK":
-                cursor.execute(f"""INSERT INTO season_{YEAR} (week, team, opponent) VALUES (?, ?, ?)""",
-                                (index, team, "BYE WEEK"))
-                cursor.execute(f"""UPDATE season_{YEAR} SET bye = ? WHERE team = ?""",
-                                (index, team, ))
-
-                print(index, team, "BYE_WEEK")
-                index += 1
+                i = 'BYE_WEEK'
+                bye = index
 
             if i in CITY_T0_ABBREV:
                 cursor.execute(f"""INSERT INTO season_{YEAR} (week, team, opponent) VALUES (?, ?, ?)""",
@@ -121,6 +117,8 @@ def get_schedule(cursor: sqlite3.Cursor, conn: sqlite3.Connection) -> None:
                 print(index, team, CITY_T0_ABBREV[i])
                 index += 1
 
+        cursor.execute(f"""UPDATE season_{YEAR} SET bye = ? WHERE team = ?""",
+                       (bye, team, ))
         sleep(3)
 
     conn.commit()
@@ -169,6 +167,10 @@ def draft_order(cursor: sqlite3.Cursor, conn: sqlite3.Connection) -> None:
                         WHERE week = ? AND team = ?""", (index - 33, index, index - 16, index - 16, 1,
                         FULL_TO_ABBREV[item]))
 
+        # cursor.execute(f"""INSERT INTO season_{YEAR} (loss_rank, win_rank, power, avg_power, week, team)
+        #                 VALUES (?, ?, ?, ?, ?, ?)""", (index - 33, index, index - 16, index - 16, 0,
+        #                 FULL_TO_ABBREV[item]))
+
         index += 1
 
     conn.commit()
@@ -200,9 +202,12 @@ def main() -> None:
     draft_order(cursor, conn)
     fix_two_team_problem(cursor, conn)
 
-    conn.close()
+    print(f"Database initialized for {YEAR} season\n\n")
 
-    print(f"Database initialized for {YEAR} season")
+    # Make predictions for W1
+    prediction(cursor, conn)
+
+    conn.close()
 
 
 if __name__ == "__main__":
