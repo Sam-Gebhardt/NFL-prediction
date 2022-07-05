@@ -17,7 +17,7 @@ CITY_T0_ABBREV = {
     'Miami': 'mia', 'Minnesota': 'min', 'New England': 'ne', 'New Orleans': 'no',
     'New York': 'ny', 'Las Vegas': 'lv', 'Philadelphia': 'phi',
     'Pittsburgh': 'pit', 'San Francisco': 'sf', 'Seattle': 'sea', 'Tampa Bay': 'tb',
-    'Tennessee': 'ten', 'Washington': 'wsh'
+    'Tennessee': 'ten', 'Washington': 'wsh', 'BYE_WEEK': 'BYE_WEEK'
                     }
 
 ABBREV_TO_FULL = {
@@ -26,7 +26,7 @@ ABBREV_TO_FULL = {
     'cin': 'Cincinnati Bengals', 'cle': 'Cleveland Browns', 'dal': 'Dallas Cowboys',
     'den': 'Denver Broncos', 'det': 'Detroit Lions', 'gb': 'Green Bay Packers',
     'hou': 'Houston Texans', 'ind': 'Indianapolis Colts', 'jax': 'Jacksonville Jaguars',
-    'kc': 'Kansas City Chiefs', 'Los Angeles Chargers': 'lac', 'lar': 'Los Angeles Rams',
+    'kc': 'Kansas City Chiefs', 'lac': 'Los Angeles Chargers', 'lar': 'Los Angeles Rams',
     'mia': 'Miami Dolphins', 'min': 'Minnesota Vikings', 'ne': 'New England Patriots',
     'no': 'New Orleans Saints', 'nyg': 'New York Giants', 'nyj': 'New York Jets',
     'lv': 'Las Vegas Raiders', 'phi': 'Philadelphia Eagles', 'pit': 'Pittsburgh Steelers',
